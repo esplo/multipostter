@@ -3,12 +3,14 @@ import Proto, { RichText } from "@atproto/api";
 import sharp from "sharp";
 import { CommonPostData } from "./types.js";
 const { BskyAgent } = Proto;
+import { Agent, AtpAgent } from "@atproto/api";
 
 const FILE_SIZE_LIMIT = 1000000;
+const VIDEO_FILE_SIZE_LIMIT = 100_000_000; // 100mb
 
 class BskyClient {
-  agent: Proto.BskyAgent;
-  constructor(agent: Proto.BskyAgent) {
+  agent: AtpAgent;
+  constructor(agent: AtpAgent) {
     this.agent = agent;
   }
 
@@ -34,6 +36,10 @@ class BskyClient {
       console.log(`Too many files ${post.files.length}`);
       return true;
     }
+
+    // 300 graphemes
+    // [...new Intl.Segmenter().segment('🏳️‍⚧️🏳️‍🌈👩🏾‍❤️‍👨🏻')].length;
+
     return true;
   };
 
@@ -58,43 +64,109 @@ class BskyClient {
       // 稀にisPublic:falseになる。気になるがいったん無視
       // throw Error(`Invalid Post`);
     }
-    const _fileBlobs = await Promise.all(
-      post.files
-        .slice(0, 4)
-        .map(
-          async (e): Promise<Proto.ComAtprotoRepoUploadBlob.OutputSchema> => {
-            const url = e.url;
-            const origblob = await fetch(url).then((r) => r.blob());
-            const imgBuffer = await this.convertImg(origblob);
 
-            const { data } = await this.agent.uploadBlob(imgBuffer, {
-              encoding: origblob.type,
-            });
-
-            return data;
-          }
-        )
+    const attachmentBlobs = await Promise.all(
+      post.files.map(async (e): Promise<Blob> => {
+        const url = e.url;
+        const blob = await fetch(url).then((r) => r.blob());
+        return blob;
+      })
     );
 
-    // TODO: 動画以外のファイルもアップロードする
-    const fileBlobs = _fileBlobs.filter((e) => !e.blob.mimeType.startsWith('video/'));
+    const attachmentImages = attachmentBlobs.filter((e) =>
+      e.type.startsWith("image/")
+    );
 
-    const rt = new RichText({ text: post.text ?? "-" });
+    const attachmentVideos = attachmentBlobs.filter((e) =>
+      e.type.startsWith("video/")
+    );
+
+    const embed = await (async () => {
+      // app.bsky.feed.post embed は images/video の同時添付ができないため、
+      // video があれば優先して添付する
+      if (attachmentVideos.length > 0) {
+        const video = attachmentVideos[0];
+        if (attachmentVideos.length > 1) {
+          console.log(
+            `Too many videos ${attachmentVideos.length}, only first will be posted`
+          );
+        }
+
+        if (video.type !== "video/mp4") {
+          console.log(
+            `Unsupported video type ${video.type}, fallback to image embed if possible`
+          );
+        } else if (video.size > VIDEO_FILE_SIZE_LIMIT) {
+          console.log(
+            `Video is too large ${video.size}, fallback to image embed if possible`
+          );
+        } else {
+          const videoBuffer = Buffer.from(await video.arrayBuffer());
+          const { data } = await this.agent.uploadBlob(videoBuffer, {
+            encoding: video.type,
+          });
+
+          return {
+            $type: "app.bsky.embed.video",
+            video: data.blob,
+            alt: "",
+          } as const;
+        }
+      }
+
+      if (attachmentImages.length > 0) {
+        // sharp
+        const imgBlobs = await Promise.all(
+          attachmentImages
+            .slice(0, 4)
+            .map(
+              async (
+                origblob
+              ): Promise<Proto.ComAtprotoRepoUploadBlob.OutputSchema> => {
+                const imgBuffer = await this.convertImg(origblob);
+                const { data } = await this.agent.uploadBlob(imgBuffer, {
+                  encoding: origblob.type,
+                });
+
+                return data;
+              }
+            )
+        );
+
+        return {
+          $type: "app.bsky.embed.images",
+          images: imgBlobs.map((e) => ({
+            alt: "",
+            image: e.blob,
+          })),
+        } as const;
+      }
+
+      return undefined;
+    })();
+
+    const rt = new RichText({ text: post.text ?? "" });
     await rt.detectFacets(this.agent);
 
-    await this.agent.post({
-      text: rt.text,
-      facets: rt.facets,
-      createdAt: post.createdAt.toISO()!,
-      langs: ["ja", "ja-JP"],
-      embed: {
-        $type: "app.bsky.embed.images",
-        images: fileBlobs.map((e) => ({
-          alt: "",
-          image: e.blob,
-        })),
-      },
-    });
+    await this.agent.post(
+      (() => {
+        const record: Parameters<BskyClient["agent"]["post"]>[0] = {
+          text: rt.text,
+          facets: rt.facets,
+          createdAt: post.createdAt.toISO()!,
+          langs: ["ja", "ja-JP"],
+        };
+
+        if (embed) {
+          record.embed = embed;
+        } else if (!record.text) {
+          // embed が無いのに空文字は避ける
+          record.text = "-";
+        }
+
+        return record;
+      })()
+    );
   };
 }
 
