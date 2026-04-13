@@ -1,26 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2024",
     "module": "NodeNext",
-    "lib": ["es2020", "dom"],
+    "lib": ["ES2024", "DOM"],
     "declaration": true,
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
     "inlineSourceMap": true,
     "inlineSources": true,
-    "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "NodeNext",
-    "typeRoots": ["./node_modules/@types"],
-    "allowJs": true
+    "outDir": "dist"
   },
-  "exclude": ["node_modules", "cdk.out"]
+  "include": ["bin/**/*.ts", "lambda/**/*.ts", "lib/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["node_modules", "cdk.out", "dist"]
 }

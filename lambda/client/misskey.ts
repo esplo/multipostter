@@ -1,6 +1,6 @@
 import axios from "axios";
 import { DateTime } from "luxon";
-import { CommonPostData } from "./types.js";
+import type { CommonPostData } from "./types.js";
 
 const BASE_URL = "https://misskey.io/api";
 // const commonData = { i: ACCESS_KEY };
@@ -31,7 +31,7 @@ type NoteInfo = {
         url: "string";
         offsetX: 0;
         offsetY: 0;
-      }
+      },
     ];
     isBot: true;
     isCat: true;
@@ -53,13 +53,13 @@ type NoteInfo = {
         name: "string";
         iconUrl: "string";
         displayOrder: 0;
-      }
+      },
     ];
   };
   replyId: "xxxxxxxxxx";
   renoteId: "xxxxxxxxxx";
-  reply: {};
-  renote: {};
+  reply: Record<string, never>;
+  renote: Record<string, never>;
   isHidden: true;
   visibility: "public";
   mentions: ["string"];
@@ -92,7 +92,7 @@ type NoteInfo = {
         parentId: "xxxxxxxxxx";
         foldersCount: 0;
         filesCount: 0;
-        parent: {};
+        parent: Record<string, never>;
       };
       userId: "xxxxxxxxxx";
       user: {
@@ -110,7 +110,7 @@ type NoteInfo = {
             url: "string";
             offsetX: 0;
             offsetY: 0;
-          }
+          },
         ];
         isBot: true;
         isCat: true;
@@ -132,10 +132,10 @@ type NoteInfo = {
             name: "string";
             iconUrl: "string";
             displayOrder: 0;
-          }
+          },
         ];
       };
-    }
+    },
   ];
   tags: ["string"];
   poll: {
@@ -146,7 +146,7 @@ type NoteInfo = {
         isVoted: true;
         text: "string";
         votes: 0;
-      }
+      },
     ];
   };
   emojis: {
@@ -183,7 +183,7 @@ type NoteInfo = {
 
 export async function fetchMyPosts(
   myUserId: string,
-  sinceId: string | undefined
+  sinceId: string | undefined,
 ): Promise<CommonPostData[]> {
   const followingResponse = await axios.post<NotesShowResponse>(
     `${BASE_URL}/users/notes`,
@@ -198,7 +198,7 @@ export async function fetchMyPosts(
     },
     {
       headers,
-    }
+    },
   );
   const t = await Promise.all(followingResponse.data.map(parseNote));
   t.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());

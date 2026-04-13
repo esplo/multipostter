@@ -1,14 +1,14 @@
 // https://github.com/bluesky-social/atproto/issues/910
 
-import { SSM } from "@aws-sdk/client-ssm";
+import { setTimeout } from "node:timers/promises";
 import * as url from "node:url";
-import { setTimeout } from "timers/promises";
+import { SSM } from "@aws-sdk/client-ssm";
 import { initBsky } from "./client/bsky.js";
 import { DDBClient } from "./client/dynamodb.js";
 import * as mastodon from "./client/mastodon.js";
 import { fetchMyPosts } from "./client/misskey.js";
 import { TwitterClient } from "./client/twitter.js";
-import { CommonPostData, SNSSource } from "./client/types.js";
+import type { CommonPostData, SNSSource } from "./client/types.js";
 
 type Credentials = {
   MISSKEY_USER_ID?: string;
@@ -28,14 +28,27 @@ const getSSMCredentials = async (paramName: string): Promise<Credentials> => {
     Name: paramName,
     WithDecryption: true,
   });
-  const credentials: Credentials = JSON.parse(response.Parameter!.Value!);
-  return credentials;
+  const value = response.Parameter?.Value;
+  if (!value) {
+    throw new Error(`Missing SSM parameter value for ${paramName}`);
+  }
+
+  return JSON.parse(value) as Credentials;
+};
+
+const getRequiredEnv = (name: string): string => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is not set`);
+  }
+
+  return value;
 };
 
 const fetchSourcePosts = async (
   source: SNSSource,
   credential: Credentials,
-  sourceSinceID: string
+  sourceSinceID: string,
 ): Promise<CommonPostData[]> => {
   if (source === "misskey" && credential.MISSKEY_USER_ID) {
     return await fetchMyPosts(credential.MISSKEY_USER_ID, sourceSinceID);
@@ -47,7 +60,7 @@ const fetchSourcePosts = async (
     return await mastodon.fetchMyPosts(
       credential.MASTODON_USER_ID,
       sourceSinceID,
-      credential.MASTODON_ACCESS_TOKEN
+      credential.MASTODON_ACCESS_TOKEN,
     );
   }
 
@@ -55,22 +68,13 @@ const fetchSourcePosts = async (
 };
 
 const main = async () => {
-  const SOURCE = process.env.SOURCE! as SNSSource;
-  if (!SOURCE) {
-    throw Error("SOURCE is not set");
-  }
+  const SOURCE = getRequiredEnv("SOURCE") as SNSSource;
   if (SOURCE !== "misskey" && SOURCE !== "mastodon") {
     throw Error(`Invalid SOURCE: ${SOURCE}`);
   }
 
-  const DDB_TABLE_NAME = process.env.DDB_TABLE_NAME!;
-  if (!DDB_TABLE_NAME) {
-    throw Error("DDB_TABLE_NAME is not set");
-  }
-  const PARAMSTORE_NAME = process.env.PARAMSTORE_NAME!;
-  if (!PARAMSTORE_NAME) {
-    throw Error("PARAMSTORE_NAME is not set");
-  }
+  const DDB_TABLE_NAME = getRequiredEnv("DDB_TABLE_NAME");
+  const PARAMSTORE_NAME = getRequiredEnv("PARAMSTORE_NAME");
   const credential = await getSSMCredentials(PARAMSTORE_NAME);
 
   const ddbClient = new DDBClient(DDB_TABLE_NAME);
@@ -87,13 +91,13 @@ const main = async () => {
   if (posts.length > 0) {
     const bskyAgent = await initBsky(
       credential.BSKY_ID,
-      credential.BSKY_APP_PASS
+      credential.BSKY_APP_PASS,
     );
     const twitterAgent = new TwitterClient(
       credential.TWITTER_API_KEY,
       credential.TWITTER_API_SECRET,
       credential.TWITTER_ACCESS_TOKEN,
-      credential.TWITTER_ACCESS_TOKEN_SECRET
+      credential.TWITTER_ACCESS_TOKEN_SECRET,
     );
 
     for (const post of posts) {
@@ -106,7 +110,7 @@ const main = async () => {
   }
 };
 
-export const handler = async (event: any) => {
+export const handler = async () => {
   await main();
   return "ok";
 };

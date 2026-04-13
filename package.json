@@ -2,44 +2,55 @@
   "type": "module",
   "name": "multipostter",
   "version": "0.1.0",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24",
+    "npm": "use-pnpm",
+    "pnpm": ">=10"
+  },
   "bin": {
     "multipostter": "bin/multipostter.js"
   },
   "scripts": {
     "build": "tsc",
+    "format": "biome check --write bin lambda lib --unsafe",
+    "typecheck": "tsc --noEmit",
+    "knip": "knip",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "node --test",
     "cdk": "cdk",
-    "lambdabuild": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --format=cjs --outfile=dist/index.js"
+    "lambdabuild": "esbuild lambda/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --format=cjs --outfile=dist/index.js"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.159",
+    "@biomejs/biome": "^2.4.11",
+    "@types/aws-lambda": "^8.10.161",
     "@types/html-to-text": "^9.0.4",
     "@types/jest": "^30.0.0",
     "@types/luxon": "^3.7.1",
-    "@types/node": "25.0.3",
-    "aws-cdk": "2.1034.0",
-    "esbuild": "^0.27.2",
-    "jest": "^30.2.0",
+    "@types/node": "25.6.0",
+    "aws-cdk": "2.1118.0",
+    "esbuild": "^0.28.0",
+    "jest": "^30.3.0",
+    "knip": "^6.4.1",
     "luxon": "^3.7.2",
-    "ts-jest": "^29.4.6",
+    "npm-check-updates": "^20.0.1",
+    "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.2"
   },
   "dependencies": {
-    "@atproto/api": "^0.18.8",
-    "@aws-sdk/client-dynamodb": "^3.953.0",
-    "@aws-sdk/client-ssm": "^3.953.0",
-    "@aws-sdk/lib-dynamodb": "^3.953.0",
-    "aws-cdk-lib": "2.232.2",
-    "axios": "^1.13.2",
-    "constructs": "^10.4.4",
+    "@atproto/api": "^0.19.8",
+    "@aws-sdk/client-dynamodb": "^3.1029.0",
+    "@aws-sdk/client-ssm": "^3.1029.0",
+    "@aws-sdk/lib-dynamodb": "^3.1029.0",
+    "aws-cdk-lib": "2.249.0",
+    "axios": "^1.15.0",
+    "constructs": "^10.6.0",
     "html-to-text": "^9.0.5",
-    "masto": "^7.9.0",
+    "masto": "^7.10.2",
     "sharp": "^0.34.5",
     "source-map-support": "^0.5.21",
     "ts-pattern": "^5.9.0",
-    "twitter-api-v2": "^1.28.0"
-  },
-  "packageManager": "pnpm@10.26.0"
+    "twitter-api-v2": "^1.29.0"
+  }
 }

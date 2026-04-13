@@ -1,9 +1,9 @@
 // https://github.com/bluesky-social/atproto/issues/910
-import Proto, { RichText } from "@atproto/api";
+import Proto, { type AtpAgent, RichText } from "@atproto/api";
 import sharp from "sharp";
-import { CommonPostData } from "./types.js";
+import type { CommonPostData } from "./types.js";
+
 const { BskyAgent } = Proto;
-import { Agent, AtpAgent } from "@atproto/api";
 
 const FILE_SIZE_LIMIT = 1000000;
 const VIDEO_FILE_SIZE_LIMIT = 100_000_000; // 100mb
@@ -70,15 +70,15 @@ class BskyClient {
         const url = e.url;
         const blob = await fetch(url).then((r) => r.blob());
         return blob;
-      })
+      }),
     );
 
     const attachmentImages = attachmentBlobs.filter((e) =>
-      e.type.startsWith("image/")
+      e.type.startsWith("image/"),
     );
 
     const attachmentVideos = attachmentBlobs.filter((e) =>
-      e.type.startsWith("video/")
+      e.type.startsWith("video/"),
     );
 
     const embed = await (async () => {
@@ -88,17 +88,17 @@ class BskyClient {
         const video = attachmentVideos[0];
         if (attachmentVideos.length > 1) {
           console.log(
-            `Too many videos ${attachmentVideos.length}, only first will be posted`
+            `Too many videos ${attachmentVideos.length}, only first will be posted`,
           );
         }
 
         if (video.type !== "video/mp4") {
           console.log(
-            `Unsupported video type ${video.type}, fallback to image embed if possible`
+            `Unsupported video type ${video.type}, fallback to image embed if possible`,
           );
         } else if (video.size > VIDEO_FILE_SIZE_LIMIT) {
           console.log(
-            `Video is too large ${video.size}, fallback to image embed if possible`
+            `Video is too large ${video.size}, fallback to image embed if possible`,
           );
         } else {
           const videoBuffer = Buffer.from(await video.arrayBuffer());
@@ -121,7 +121,7 @@ class BskyClient {
             .slice(0, 4)
             .map(
               async (
-                origblob
+                origblob,
               ): Promise<Proto.ComAtprotoRepoUploadBlob.OutputSchema> => {
                 const imgBuffer = await this.convertImg(origblob);
                 const { data } = await this.agent.uploadBlob(imgBuffer, {
@@ -129,8 +129,8 @@ class BskyClient {
                 });
 
                 return data;
-              }
-            )
+              },
+            ),
         );
 
         return {
@@ -150,10 +150,15 @@ class BskyClient {
 
     await this.agent.post(
       (() => {
+        const createdAt = post.createdAt.toISO();
+        if (!createdAt) {
+          throw new Error("createdAt could not be converted to ISO");
+        }
+
         const record: Parameters<BskyClient["agent"]["post"]>[0] = {
           text: rt.text,
           facets: rt.facets,
-          createdAt: post.createdAt.toISO()!,
+          createdAt,
           langs: ["ja", "ja-JP"],
         };
 
@@ -165,14 +170,14 @@ class BskyClient {
         }
 
         return record;
-      })()
+      })(),
     );
   };
 }
 
 export const initBsky = async (
   identifier: string,
-  password: string
+  password: string,
 ): Promise<BskyClient> => {
   const agent = new BskyAgent({
     service: "https://bsky.social",

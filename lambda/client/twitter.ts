@@ -1,5 +1,5 @@
 import { EUploadMimeType, TwitterApi } from "twitter-api-v2";
-import { CommonPostData } from "./types.js";
+import type { CommonPostData } from "./types.js";
 
 export class TwitterClient {
   userClient: TwitterApi;
@@ -8,7 +8,7 @@ export class TwitterClient {
     appKey: string,
     appSecret: string,
     accessToken: string,
-    accessSecret: string
+    accessSecret: string,
   ) {
     this.userClient = new TwitterApi({
       appKey,
@@ -20,7 +20,7 @@ export class TwitterClient {
 
   uploadMedia = async (
     original: Blob,
-    extension: string
+    extension: string,
   ): Promise<string | undefined> => {
     const origBuffer = await original.arrayBuffer();
     if (!extension) {
@@ -63,18 +63,21 @@ export class TwitterClient {
         post.files.slice(0, 4).map(async (f) => {
           const url = f.url;
           // `.webp?sensitive=true` などに対処
-          const extension = url
-            .split(".")
-            .pop()!
-            .replace(/\?+.*$/, "");
+          const extensionPart = url.split(".").pop();
+          if (!extensionPart) {
+            throw new Error(
+              `[Twitter] Cannot determine file extension: ${url}`,
+            );
+          }
+          const extension = extensionPart.replace(/\?+.*$/, "");
           const origblob = await fetch(url).then((r) => r.blob());
           const mediaID = await this.uploadMedia(origblob, extension);
           if (!mediaID)
             throw new Error(
-              `[Twitter] Cannot upload image: ${f.url}, ext: ${extension}`
+              `[Twitter] Cannot upload image: ${f.url}, ext: ${extension}`,
             );
           return mediaID;
-        })
+        }),
       )
     ).filter((e) => e !== "");
     const param =
@@ -86,7 +89,7 @@ export class TwitterClient {
           }
         : {};
     const text = () => {
-      if (post.text.length >= 140) return post.text.slice(0, 135) + "[略]";
+      if (post.text.length >= 140) return `${post.text.slice(0, 135)}[略]`;
       else return post.text;
     };
     const t = await this.userClient.v2.tweet(text(), param);

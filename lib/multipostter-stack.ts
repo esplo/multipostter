@@ -1,7 +1,7 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import * as cdk from "aws-cdk-lib";
-import { Construct } from "constructs";
-import path from "path";
-import { fileURLToPath } from "url";
+import type { Construct } from "constructs";
 
 export const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
@@ -24,7 +24,7 @@ export class MultipostterStack extends cdk.Stack {
           type: cdk.aws_dynamodb.AttributeType.STRING,
         },
         billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-      }
+      },
     );
 
     const params = new cdk.aws_ssm.StringParameter(
@@ -44,7 +44,7 @@ export class MultipostterStack extends cdk.Stack {
   "TWITTER_ACCESS_TOKEN_SECRET": "string"
 }`,
         tier: cdk.aws_ssm.ParameterTier.STANDARD,
-      }
+      },
     );
 
     const fn = new cdk.aws_lambda_nodejs.NodejsFunction(
@@ -75,7 +75,7 @@ export class MultipostterStack extends cdk.Stack {
         runtime: cdk.aws_lambda.Runtime.NODEJS_LATEST,
         timeout: cdk.Duration.seconds(60), // if there are many posts, retry again
         retryAttempts: 0,
-      }
+      },
     );
 
     table.grantReadWriteData(fn);

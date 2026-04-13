@@ -1,12 +1,12 @@
 import { convert } from "html-to-text";
 import { DateTime } from "luxon";
-import { createRestAPIClient, mastodon } from "masto";
-import { CommonPostData } from "./types.js";
+import { createRestAPIClient, type mastodon } from "masto";
+import type { CommonPostData } from "./types.js";
 
 export async function fetchMyPosts(
   myUserId: string,
   sinceId: string | undefined,
-  accessToken: string
+  accessToken: string,
 ): Promise<CommonPostData[]> {
   const masto = createRestAPIClient({
     url: "https://mastodon.social/",
@@ -31,9 +31,15 @@ function parseNote(note: mastodon.v1.Status): CommonPostData {
   const d = {
     originalID: note.id,
     text: textContent,
-    files: note.mediaAttachments.map((e) => ({
-      url: e.url!,
-    })),
+    files: note.mediaAttachments.flatMap((e) =>
+      e.url
+        ? [
+            {
+              url: e.url,
+            },
+          ]
+        : [],
+    ),
     createdAt: DateTime.fromISO(note.createdAt),
     isPublic: note.visibility === "public",
   };

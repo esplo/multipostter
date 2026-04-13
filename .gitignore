@@ -10,3 +10,10 @@ cdk.out
 .DS_Store
 
 bin/mpost.ts
+
+.agents/
+AGENTS.md
+.claude/
+CLAUDE.md
+
+skills.sh

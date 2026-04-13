@@ -2,10 +2,10 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   QueryCommand,
-  QueryCommandOutput,
+  type QueryCommandOutput,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { SNSSource } from "./types.js";
+import type { SNSSource } from "./types.js";
 
 const PKEY = "sourceSNS";
 
@@ -47,10 +47,11 @@ export class DDBClient {
       Items?: { source: string; lastid: string }[];
     };
     const response = (await this.client.send(command)) as OUTPUT;
-    console.log(response.Items);
-    if (response.Items!.length === 0) {
+    const items = response.Items ?? [];
+    console.log(items);
+    if (items.length === 0) {
       return undefined;
     }
-    return response.Items![0].lastid;
+    return items[0]?.lastid;
   }
 }

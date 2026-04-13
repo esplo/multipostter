@@ -1,0 +1,24 @@
+[tools]
+node = "24"
+pnpm = "10.33.0"
+
+[env]
+_.path = ["{{config_root}}/node_modules/.bin"]
+
+[tasks.install]
+description = "Install dependencies"
+run = "pnpm install && xattr -w com.dropbox.ignored 1 node_modules"
+sources = ["package.json", "pnpm-lock.yaml", "mise.toml", ".npmrc"]
+outputs = ["node_modules/.pnpm/lock.yaml"]
+
+[tasks.format]
+description = "Typecheck, format, and lint"
+run = "tsc --noEmit && biome check --write bin lambda lib --unsafe"
+
+[tasks.test]
+description = "Run tests"
+run = "node --test"
+
+[tasks.upgrade]
+description = "Upgrade dependencies"
+run = "pnpm exec npm-check-updates -u && mise run install"
