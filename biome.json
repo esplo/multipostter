@@ -23,6 +23,7 @@
       "bin/**/*.ts",
       "lambda/**/*.ts",
       "lib/**/*.ts",
+      "scripts/**/*.mjs",
       "!bin/mpost.ts",
       "!**/*.d.ts",
       "!**/*.js",

@@ -38,3 +38,9 @@ type Credentials = {
 ```bash
 SOURCE="xxx" DDB_TABLE_NAME="xxx" PARAMSTORE_NAME="xxx" pnpx tsx ./lambda/index.ts
 ```
+
+## inspect lambda logs
+
+```bash
+mise run lambda:logs -- esploMultipostterStack-esplomultiPostFn16591C01-OzxEIyez2yod --since 1h
+```

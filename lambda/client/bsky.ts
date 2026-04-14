@@ -1,6 +1,6 @@
 // https://github.com/bluesky-social/atproto/issues/910
 import Proto, { type AtpAgent, RichText } from "@atproto/api";
-import sharp from "sharp";
+import { fitImageToByteLimit } from "./image.js";
 import type { CommonPostData } from "./types.js";
 
 const { BskyAgent } = Proto;
@@ -44,18 +44,7 @@ class BskyClient {
   };
 
   convertImg = async (original: Blob): Promise<Buffer> => {
-    if (original.size <= FILE_SIZE_LIMIT) {
-      return Buffer.from(await original.arrayBuffer());
-    }
-    for (const w of [1920, 1280, 980, 480]) {
-      const buffer = sharp(await original.arrayBuffer());
-      const mdg = await buffer.resize({ width: w }).toBuffer();
-      if (mdg.byteLength <= FILE_SIZE_LIMIT) {
-        return mdg;
-      }
-    }
-
-    throw new Error("cannot convert image");
+    return await fitImageToByteLimit(original, FILE_SIZE_LIMIT);
   };
 
   post = async (post: CommonPostData) => {

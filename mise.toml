@@ -13,11 +13,15 @@ outputs = ["node_modules/.pnpm/lock.yaml"]
 
 [tasks.format]
 description = "Typecheck, format, and lint"
-run = "tsc --noEmit && biome check --write bin lambda lib --unsafe"
+run = "tsc --noEmit && biome check --write bin lambda lib scripts --unsafe"
 
 [tasks.test]
 description = "Run tests"
-run = "node --test"
+run = "tsc && node --test dist/lambda/client/*.test.js"
+
+[tasks."lambda:logs"]
+description = "Tail Lambda logs via aws-vault"
+run = "node ./scripts/lambda-logs.mjs"
 
 [tasks.upgrade]
 description = "Upgrade dependencies"

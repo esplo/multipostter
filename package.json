@@ -13,11 +13,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "format": "biome check --write bin lambda lib --unsafe",
+    "format": "biome check --write bin lambda lib scripts --unsafe",
     "typecheck": "tsc --noEmit",
     "knip": "knip",
     "watch": "tsc -w",
-    "test": "node --test",
+    "test": "tsc && node --test dist/lambda/client/*.test.js",
     "cdk": "cdk",
     "lambdabuild": "esbuild lambda/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --format=cjs --outfile=dist/index.js"
   },
