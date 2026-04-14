@@ -42,5 +42,8 @@ SOURCE="xxx" DDB_TABLE_NAME="xxx" PARAMSTORE_NAME="xxx" pnpx tsx ./lambda/index.
 ## inspect lambda logs
 
 ```bash
-mise run lambda:logs -- esploMultipostterStack-esplomultiPostFn16591C01-OzxEIyez2yod --since 1h
+mise run lambda:logs -- esploMultipostterStack-esplomultiPostFn --since 1h
 ```
+
+You can pass the full Lambda function name, a unique partial function name, or a full
+CloudWatch log group name. If the function has never run, the log group will not exist yet.
