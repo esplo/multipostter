@@ -45,6 +45,9 @@ const getRequiredEnv = (name: string): string => {
   return value;
 };
 
+const shouldCrossPost = (post: CommonPostData): boolean =>
+  post.shouldCrossPost !== false;
+
 const fetchSourcePosts = async (
   source: SNSSource,
   credential: Credentials,
@@ -89,19 +92,32 @@ const main = async () => {
 
   // bskyはinitializeをするだけでAPIレートを消費し、スロットリングするので
   if (posts.length > 0) {
-    const bskyAgent = await initBsky(
-      credential.BSKY_ID,
-      credential.BSKY_APP_PASS,
-    );
-    const twitterAgent = new TwitterClient(
-      credential.TWITTER_API_KEY,
-      credential.TWITTER_API_SECRET,
-      credential.TWITTER_ACCESS_TOKEN,
-      credential.TWITTER_ACCESS_TOKEN_SECRET,
-    );
+    let bskyAgent: Awaited<ReturnType<typeof initBsky>> | undefined;
+    let twitterAgent: TwitterClient | undefined;
 
     for (const post of posts) {
       await setTimeout(1000);
+      if (!shouldCrossPost(post)) {
+        console.log("[Skip cross-post]", {
+          originalID: post.originalID,
+          reason: post.skipCrossPostReason ?? "Unknown reason",
+          text: post.text,
+        });
+        await ddbClient.putLastID(post.originalID, SOURCE);
+        continue;
+      }
+
+      bskyAgent ??= await initBsky(
+        credential.BSKY_ID,
+        credential.BSKY_APP_PASS,
+      );
+      twitterAgent ??= new TwitterClient(
+        credential.TWITTER_API_KEY,
+        credential.TWITTER_API_SECRET,
+        credential.TWITTER_ACCESS_TOKEN,
+        credential.TWITTER_ACCESS_TOKEN_SECRET,
+      );
+
       await bskyAgent.post(post);
       await twitterAgent.post(post);
       await ddbClient.putLastID(post.originalID, SOURCE);

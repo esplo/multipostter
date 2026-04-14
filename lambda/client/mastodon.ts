@@ -42,6 +42,7 @@ function parseNote(note: mastodon.v1.Status): CommonPostData {
     ),
     createdAt: DateTime.fromISO(note.createdAt),
     isPublic: note.visibility === "public",
+    shouldCrossPost: true,
   };
   console.log(d);
   return d;

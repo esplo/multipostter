@@ -10,4 +10,6 @@ export type CommonPostData = {
   }>;
   createdAt: DateTime;
   isPublic: boolean;
+  shouldCrossPost?: boolean;
+  skipCrossPostReason?: string;
 };

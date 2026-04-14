@@ -181,6 +181,24 @@ type NoteInfo = {
   myReaction: "string";
 };
 
+type MisskeyNoteLike = {
+  id: string;
+  createdAt: string;
+  text: string;
+  files: Array<{
+    url: string;
+  }>;
+  visibility: string;
+  isHidden: boolean;
+  mentions: string[];
+};
+
+const REPLY_MENTION_PATTERN = /(^|[\s(])@[\w.-]+(?:@[\w.-]+)?/u;
+
+export const shouldSkipCrossPostFromMisskeyNote = (
+  note: Pick<MisskeyNoteLike, "mentions" | "text">,
+): boolean => note.mentions.length > 0 || REPLY_MENTION_PATTERN.test(note.text);
+
 export async function fetchMyPosts(
   myUserId: string,
   sinceId: string | undefined,
@@ -206,7 +224,10 @@ export async function fetchMyPosts(
   return t;
 }
 
-async function parseNote(note: NoteInfo): Promise<CommonPostData> {
+export async function parseNote(
+  note: MisskeyNoteLike,
+): Promise<CommonPostData> {
+  const shouldCrossPost = !shouldSkipCrossPostFromMisskeyNote(note);
   const d = {
     originalID: note.id,
     text: note.text,
@@ -215,6 +236,10 @@ async function parseNote(note: NoteInfo): Promise<CommonPostData> {
     })),
     createdAt: DateTime.fromISO(note.createdAt),
     isPublic: note.visibility === "public" && !note.isHidden,
+    shouldCrossPost,
+    skipCrossPostReason: shouldCrossPost
+      ? undefined
+      : "Misskey note contains a reply mention",
   };
   return d;
 }
