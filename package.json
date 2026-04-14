@@ -19,7 +19,7 @@
     "watch": "tsc -w",
     "test": "tsc && node --test dist/lambda/client/*.test.js",
     "cdk": "cdk",
-    "lambdabuild": "esbuild lambda/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --format=cjs --outfile=dist/index.js"
+    "lambdabuild": "esbuild lambda/index.ts --bundle --minify --sourcemap --platform=node --target=es2024 --format=esm --outfile=dist/index.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",

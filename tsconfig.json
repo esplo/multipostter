@@ -17,7 +17,13 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "NodeNext",
+    "types": ["node"],
     "outDir": "dist"
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalResolver": true,
+    "preferTsExts": true
   },
   "include": ["bin/**/*.ts", "lambda/**/*.ts", "lib/**/*.ts", "types/**/*.d.ts"],
   "exclude": ["node_modules", "cdk.out", "dist"]

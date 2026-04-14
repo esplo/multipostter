@@ -5,6 +5,7 @@ import type { Construct } from "constructs";
 
 export const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
+const PNPM_ALLOWED_BUILD_DEPENDENCIES = ["esbuild", "sharp", "unrs-resolver"];
 
 interface Props extends cdk.StackProps {
   prefix: string;
@@ -62,17 +63,37 @@ export class MultipostterStack extends cdk.Stack {
         bundling: {
           format: cdk.aws_lambda_nodejs.OutputFormat.ESM,
           mainFields: ["module", "main"],
+          esbuildVersion: "0.28.0",
           minify: true,
           sourceMap: true,
+          target: "es2024",
+          tsconfig: path.join(__dirname, "../tsconfig.json"),
           // platform: "linux/arm64", // change if your system is x86_64
           // // https://github.com/aws/aws-cdk/issues/29310
           banner:
             "const require = (await import('node:module')).createRequire(import.meta.url);const __filename = (await import('node:url')).fileURLToPath(import.meta.url);const __dirname = (await import('node:path')).dirname(__filename);",
+          commandHooks: {
+            beforeInstall(_inputDir, outputDir) {
+              return [
+                "mkdir -p /tmp/cdk-bin",
+                "printf '#!/bin/sh\\ntarget_dir=\"$PWD\"\\ncd /tmp/cdk-bin || exit 1\\nexec npm exec --yes --package=pnpm@10.33.0 -- pnpm --dir \"$target_dir\" \"$@\"\\n' > /tmp/cdk-bin/pnpm",
+                "chmod +x /tmp/cdk-bin/pnpm",
+                "export PATH=/tmp/cdk-bin:$PATH",
+                `printf '%s\\n' ${PNPM_ALLOWED_BUILD_DEPENDENCIES.map((dependency) => `'only-built-dependencies[]=${dependency}'`).join(" ")} > ${path.posix.join(outputDir, ".npmrc")}`,
+              ];
+            },
+            beforeBundling() {
+              return [];
+            },
+            afterBundling() {
+              return [];
+            },
+          },
           forceDockerBundling: true,
           nodeModules: ["sharp"],
         },
         memorySize: 2048,
-        runtime: cdk.aws_lambda.Runtime.NODEJS_LATEST,
+        runtime: cdk.aws_lambda.Runtime.NODEJS_24_X,
         timeout: cdk.Duration.seconds(60), // if there are many posts, retry again
         retryAttempts: 0,
       },

@@ -1,5 +1,5 @@
 {
-  "app": "pnpx tsx bin/mpost.ts",
+  "app": "node --import ./scripts/register-ts-node.mjs bin/mpost.ts",
   "watch": {
     "include": ["**"],
     "exclude": [
@@ -49,7 +49,6 @@
     "@aws-cdk/core:includePrefixInUniqueNameGeneration": true,
     "@aws-cdk/aws-efs:denyAnonymousAccess": true,
     "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": true,
-    "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": true,
     "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": true,
     "@aws-cdk/aws-rds:auroraClusterChangeScopeOfInstanceParameterGroupWithEachParameters": true,
     "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": true,

@@ -26,3 +26,7 @@ run = "node ./scripts/lambda-logs.mjs"
 [tasks.upgrade]
 description = "Upgrade dependencies"
 run = "pnpm exec npm-check-updates -u && mise run install"
+
+[tasks.deploy]
+description = "Deploy to production"
+run = "aws-vault exec main -- pnpm exec cdk deploy"

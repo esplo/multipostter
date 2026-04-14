@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import "source-map-support/register";
+import "source-map-support/register.js";
 import { MultipostterStack } from "../lib/multipostter-stack.js";
 
 const app = new cdk.App();
