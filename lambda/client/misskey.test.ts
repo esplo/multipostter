@@ -49,3 +49,16 @@ test("parseNote marks Misskey replies as non-cross-postable", async () => {
     "Misskey note contains a reply mention",
   );
 });
+
+test("parseNote tolerates missing mentions and files", async () => {
+  const post = await parseNote({
+    id: "note-2",
+    createdAt: "2026-04-14T00:00:00Z",
+    text: "plain note",
+    visibility: "public",
+    isHidden: false,
+  });
+
+  assert.equal(post.shouldCrossPost, true);
+  assert.deepEqual(post.files, []);
+});

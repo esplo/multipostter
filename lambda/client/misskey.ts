@@ -184,20 +184,22 @@ type NoteInfo = {
 type MisskeyNoteLike = {
   id: string;
   createdAt: string;
-  text: string;
-  files: Array<{
+  text?: string | null;
+  files?: Array<{
     url: string;
   }>;
   visibility: string;
   isHidden: boolean;
-  mentions: string[];
+  mentions?: string[] | null;
 };
 
 const REPLY_MENTION_PATTERN = /(^|[\s(])@[\w.-]+(?:@[\w.-]+)?/u;
 
 export const shouldSkipCrossPostFromMisskeyNote = (
   note: Pick<MisskeyNoteLike, "mentions" | "text">,
-): boolean => note.mentions.length > 0 || REPLY_MENTION_PATTERN.test(note.text);
+): boolean =>
+  (note.mentions?.length ?? 0) > 0 ||
+  REPLY_MENTION_PATTERN.test(note.text ?? "");
 
 export async function fetchMyPosts(
   myUserId: string,
@@ -227,13 +229,17 @@ export async function fetchMyPosts(
 export async function parseNote(
   note: MisskeyNoteLike,
 ): Promise<CommonPostData> {
-  const shouldCrossPost = !shouldSkipCrossPostFromMisskeyNote(note);
+  const text = note.text ?? "";
+  const files = note.files?.map((e) => ({ url: e.url })) ?? [];
+  const mentions = note.mentions ?? [];
+  const shouldCrossPost = !shouldSkipCrossPostFromMisskeyNote({
+    mentions,
+    text,
+  });
   const d = {
     originalID: note.id,
-    text: note.text,
-    files: note.files.map((e) => ({
-      url: e.url,
-    })),
+    text,
+    files,
     createdAt: DateTime.fromISO(note.createdAt),
     isPublic: note.visibility === "public" && !note.isHidden,
     shouldCrossPost,
