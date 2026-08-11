@@ -1,9 +1,11 @@
-// https://github.com/bluesky-social/atproto/issues/910
-import Proto, { type AtpAgent, RichText } from "@atproto/api";
+import {
+  type AtpAgent,
+  BskyAgent,
+  type ComAtprotoRepoUploadBlob,
+  RichText,
+} from "@atproto/api";
 import { fitImageToByteLimit } from "./image.js";
 import type { CommonPostData } from "./types.js";
-
-const { BskyAgent } = Proto;
 
 const FILE_SIZE_LIMIT = 1000000;
 const VIDEO_FILE_SIZE_LIMIT = 100_000_000; // 100mb
@@ -111,7 +113,7 @@ class BskyClient {
             .map(
               async (
                 origblob,
-              ): Promise<Proto.ComAtprotoRepoUploadBlob.OutputSchema> => {
+              ): Promise<ComAtprotoRepoUploadBlob.OutputSchema> => {
                 const imgBuffer = await this.convertImg(origblob);
                 const { data } = await this.agent.uploadBlob(imgBuffer, {
                   encoding: origblob.type,

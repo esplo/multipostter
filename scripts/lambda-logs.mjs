@@ -65,7 +65,12 @@ function getFunctionName(functionName) {
     printAwsFailure(exactMatch);
   }
 
-  const functionsResult = runAws(["lambda", "list-functions", "--output", "json"]);
+  const functionsResult = runAws([
+    "lambda",
+    "list-functions",
+    "--output",
+    "json",
+  ]);
   if (!functionsResult.ok) {
     printAwsFailure(functionsResult);
   }
@@ -108,7 +113,9 @@ function findExistingLogGroup(logGroupName) {
   }
 
   const logGroups = JSON.parse(logGroupsResult.stdout).logGroups ?? [];
-  const exactMatch = logGroups.find((group) => group.logGroupName === logGroupName);
+  const exactMatch = logGroups.find(
+    (group) => group.logGroupName === logGroupName,
+  );
   if (exactMatch) {
     return exactMatch.logGroupName;
   }
@@ -128,7 +135,9 @@ function resolveLogGroup(nameOrGroup) {
 
   const functionName = getFunctionName(nameOrGroup);
   if (!functionName) {
-    console.error(`Lambda function '${nameOrGroup}' was not found in ${region}.`);
+    console.error(
+      `Lambda function '${nameOrGroup}' was not found in ${region}.`,
+    );
     process.exit(1);
   }
 
