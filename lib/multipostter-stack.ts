@@ -63,7 +63,7 @@ export class MultipostterStack extends cdk.Stack {
         bundling: {
           format: cdk.aws_lambda_nodejs.OutputFormat.ESM,
           mainFields: ["module", "main"],
-          esbuildVersion: "0.28.0",
+          esbuildVersion: "0.28.1",
           minify: true,
           sourceMap: true,
           target: "es2024",
@@ -76,7 +76,7 @@ export class MultipostterStack extends cdk.Stack {
             beforeInstall(_inputDir, outputDir) {
               return [
                 "mkdir -p /tmp/cdk-bin",
-                "printf '#!/bin/sh\\ntarget_dir=\"$PWD\"\\ncd /tmp/cdk-bin || exit 1\\nexec npm exec --yes --package=pnpm@10.33.0 -- pnpm --dir \"$target_dir\" \"$@\"\\n' > /tmp/cdk-bin/pnpm",
+                'printf \'#!/bin/sh\\ntarget_dir="$PWD"\\ncd /tmp/cdk-bin || exit 1\\nexec npm exec --yes --package=pnpm@10.33.0 -- pnpm --dir "$target_dir" "$@"\\n\' > /tmp/cdk-bin/pnpm',
                 "chmod +x /tmp/cdk-bin/pnpm",
                 "export PATH=/tmp/cdk-bin:$PATH",
                 `printf '%s\\n' ${PNPM_ALLOWED_BUILD_DEPENDENCIES.map((dependency) => `'only-built-dependencies[]=${dependency}'`).join(" ")} > ${path.posix.join(outputDir, ".npmrc")}`,
